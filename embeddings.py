@@ -12,7 +12,9 @@ EMBED_MODEL_NAME = "BAAI/bge-small-en-v1.5"
 EMBED_DIM = 384          # bge-small-en-v1.5 vector size
 TOP_K = 4
 
-EMBED_BATCH = 256        # how many chunks to encode per batch
+# Small batch keeps peak memory low so embedding fits on 512 MB hosts (a big
+# batch spikes RAM and gets the process OOM-killed). Override with EMBED_BATCH.
+EMBED_BATCH = int(os.environ.get("EMBED_BATCH", "32"))
 # Big documents: spread encoding across all CPU cores (multiprocessing). Small
 # ones stay single-process to avoid the worker start-up overhead.
 PARALLEL_THRESHOLD = 200
@@ -23,7 +25,8 @@ def get_embedder():
     global _embedder
     if _embedder is None:
         log.info("Loading embedding model %s ...", EMBED_MODEL_NAME)
-        _embedder = TextEmbedding(model_name=EMBED_MODEL_NAME)
+        # threads=1 keeps memory and CPU use modest (free hosts have ~0.1 CPU).
+        _embedder = TextEmbedding(model_name=EMBED_MODEL_NAME, threads=1)
         log.info("Embedding model ready")
     return _embedder
 

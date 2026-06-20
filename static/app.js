@@ -48,8 +48,11 @@ buildBtn.addEventListener("click", async () => {
   form.append("document", f);
   try {
     const res = await fetch("/build", { method: "POST", body: form });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not process the document");
+    const data = await safeJson(res);
+    if (!res.ok || !data) {
+      throw new Error((data && data.error) ||
+        "The server couldn't process this document. It may be too large for the current instance — try a smaller file.");
+    }
 
     rulesEl.textContent = data.rules || "(no rules found)";
     buildStat.className = "status ok";
@@ -87,8 +90,11 @@ askForm.addEventListener("submit", async e => {
       // send prior turns so follow-ups like "yes" / "continue" work
       body: JSON.stringify({ question: q, history: history.slice(-8) }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Request failed");
+    const data = await safeJson(res);
+    if (!res.ok || !data) {
+      throw new Error((data && data.error) ||
+        "The server didn't respond. It may have restarted — please try again.");
+    }
     thinking.querySelector(".bubble").textContent = data.answer;
     history.push({ role: "user", content: q });
     history.push({ role: "assistant", content: data.answer });
@@ -102,6 +108,12 @@ askForm.addEventListener("submit", async e => {
 });
 
 // --- helpers ---
+async function safeJson(res) {
+  // Returns parsed JSON, or null if the body is empty / not JSON (e.g. the
+  // server worker was killed by an out-of-memory error mid-request).
+  try { return await res.json(); } catch { return null; }
+}
+
 function addMessage(role, html, isHtml) {
   const wrap = document.createElement("div");
   wrap.className = "msg " + (role === "user" ? "user" : "bot");

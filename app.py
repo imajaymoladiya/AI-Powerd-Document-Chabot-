@@ -45,6 +45,8 @@ STATE = {"chunks": [], "collection": None, "rules": "", "note": ""}
 # (best quality for short docs like a JD). Bigger docs fall back to retrieval.
 WHOLE_DOC_CHARS = 14000
 MAX_HISTORY = 8  # how many prior conversation turns to pass to the model
+# Safety cap so a very large document can't exhaust memory on small hosts.
+MAX_CHUNKS = int(os.environ.get("MAX_CHUNKS", "1200"))
 
 # Requests that need the WHOLE document rather than a few similar chunks:
 # summaries/overviews and generative tasks (interview prep, quizzes, etc.).
@@ -112,6 +114,11 @@ def build():
         return jsonify({"error": "Could not read any text. %s" % note}), 400
 
     chunks = chunk_text(text)
+    if len(chunks) > MAX_CHUNKS:
+        log.warning("Document produced %d chunks; capping to %d to fit memory",
+                    len(chunks), MAX_CHUNKS)
+        chunks = chunks[:MAX_CHUNKS]
+        note += " (large document: indexed the first part)"
     collection = build_vector_store(chunks)
     try:
         rules = derive_rules(text)
