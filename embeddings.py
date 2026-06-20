@@ -1,3 +1,4 @@
+import os
 import time
 
 from fastembed import TextEmbedding
@@ -28,7 +29,10 @@ def get_embedder():
 
 def embed_texts(texts):
     embedder = get_embedder()
-    parallel = 0 if len(texts) >= PARALLEL_THRESHOLD else None
+    # Multiprocessing speeds up big batches locally, but loads a model copy per
+    # core -> OOM on small (512 MB) hosts. So it is OPT-IN via EMBED_PARALLEL=1.
+    use_parallel = os.environ.get("EMBED_PARALLEL") == "1"
+    parallel = 0 if (use_parallel and len(texts) >= PARALLEL_THRESHOLD) else None
     log.info("Embedding %d texts (batch=%d, parallel=%s)", len(texts), EMBED_BATCH, parallel)
     start = time.time()
     vectors = [vec.tolist()

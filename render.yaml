@@ -1,0 +1,22 @@
+# Render Blueprint - deploys the Flask app as one persistent web service.
+# In Render: New + -> Blueprint -> connect this repo. It reads this file.
+# Fill the secret env vars (GROQ_API_KEY, SARVAMAI_API_KEY) when prompted.
+services:
+  - type: web
+    name: document-agent
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # One worker so the in-memory index is shared between /build and /ask.
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 600
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: GROQ_API_KEY
+        sync: false          # set this secret in the Render dashboard
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: SARVAMAI_API_KEY
+        sync: false          # set this secret in the Render dashboard
+      - key: SARVAM_LANGUAGE
+        value: en-IN
