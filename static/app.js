@@ -13,6 +13,7 @@ const question   = document.getElementById("question");
 const askBtn     = document.getElementById("askBtn");
 
 let ready = false;
+const history = [];   // [{role:'user'|'assistant', content}] sent for context
 
 // --- file picking ---
 // NOTE: the dropzone is a <label> wrapping the hidden <input>, so clicking it
@@ -54,6 +55,7 @@ buildBtn.addEventListener("click", async () => {
     buildStat.className = "status ok";
     buildStat.textContent = "✅ Your document is ready. Ask a question below.";
 
+    history.length = 0;   // fresh conversation for the new document
     ready = true;
     question.disabled = false;
     askBtn.disabled = false;
@@ -82,11 +84,14 @@ askForm.addEventListener("submit", async e => {
     const res = await fetch("/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question: q }),
+      // send prior turns so follow-ups like "yes" / "continue" work
+      body: JSON.stringify({ question: q, history: history.slice(-8) }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Request failed");
     thinking.querySelector(".bubble").textContent = data.answer;
+    history.push({ role: "user", content: q });
+    history.push({ role: "assistant", content: data.answer });
   } catch (err) {
     thinking.querySelector(".bubble").textContent = "⚠️ " + err.message;
   } finally {

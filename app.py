@@ -41,25 +41,34 @@ app.jinja_env.auto_reload = True
 # Simple in-memory state for the current document (single-user assessment app).
 STATE = {"chunks": [], "collection": None, "rules": "", "note": ""}
 
-SUMMARY_CONTEXT_CHARS = 9000
-SUMMARY_HINTS = (
+# If the whole document fits in this many characters, send all of it as context
+# (best quality for short docs like a JD). Bigger docs fall back to retrieval.
+WHOLE_DOC_CHARS = 14000
+MAX_HISTORY = 8  # how many prior conversation turns to pass to the model
+
+# Requests that need the WHOLE document rather than a few similar chunks:
+# summaries/overviews and generative tasks (interview prep, quizzes, etc.).
+GLOBAL_HINTS = (
     "summar", "overview", "tl;dr", "tldr", "key points", "main points",
     "what is this document", "about the document", "gist", "describe the document",
     "explain the document", "give an overview",
+    "interview", "question and answer", "questions and answer", "q&a", "qna",
+    "prepare", "mock", "quiz", "practice question", "talking point",
+    "cheat sheet", "study", "list all", "all the",
 )
 
 
-def is_summary_question(question):
+def wants_whole_document(question):
     q = question.lower()
-    return any(hint in q for hint in SUMMARY_HINTS)
+    return any(hint in q for hint in GLOBAL_HINTS)
 
 
 def build_context(question, k):
-    """Summary/overview questions read a broad sample of the whole document;
-    factual questions use the top-k chunks by cosine similarity."""
-    if is_summary_question(question):
-        whole = "\n\n".join(STATE["chunks"])
-        return sample_text(whole, SUMMARY_CONTEXT_CHARS), [], "whole document (broad sample)"
+    """Small documents (and whole-document tasks like summaries / interview prep)
+    use the entire document as context; large documents use top-k retrieval."""
+    whole = "\n\n".join(STATE["chunks"])
+    if wants_whole_document(question) or len(whole) <= WHOLE_DOC_CHARS:
+        return sample_text(whole, WHOLE_DOC_CHARS), [], "whole document"
     hits = retrieve(STATE["collection"], question, k)
     context = "\n\n---\n\n".join(doc for doc, _ in hits)
     return context, hits, "top %d chunks by cosine similarity" % len(hits)
@@ -130,14 +139,15 @@ def ask():
     data = request.get_json(silent=True) or {}
     question = (data.get("question") or "").strip()
     top_k = int(data.get("top_k") or 4)
+    history = (data.get("history") or [])[-MAX_HISTORY:]
     if not question:
         return jsonify({"error": "Empty question."}), 400
 
     started = time.time()
     context, _hits, mode = build_context(question, top_k)
-    log.info("/ask question=%r mode=%s", question, mode)
+    log.info("/ask question=%r mode=%s history=%d", question, mode, len(history))
     try:
-        answer = answer_question(context, question)
+        answer = answer_question(context, question, history=history)
     except Exception as error:
         log.exception("Answer generation failed")
         answer = "Could not generate an answer: %s" % error

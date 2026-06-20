@@ -21,11 +21,17 @@ def _load_prompt():
     with open(PROMPT_PATH, "r", encoding="utf-8") as f:
         return f.read()
 
-def _chat(user_prompt, system_prompt=None, retries=1):
+def _chat(user_prompt, system_prompt=None, history=None, retries=1):
     client = Groq(api_key=GROQ_API_KEY)
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
+    # Prior conversation turns so the model can resolve follow-ups like "yes".
+    for turn in (history or []):
+        role = turn.get("role")
+        content = (turn.get("content") or "").strip()
+        if role in ("user", "assistant") and content:
+            messages.append({"role": role, "content": content})
     messages.append({"role": "user", "content": user_prompt})
     for attempt in range(retries + 1):
         try:
@@ -61,18 +67,18 @@ def sample_text(text, budget):
     return "\n\n...\n\n".join(parts)
 
 
-def answer_question(context, question):
-    # context is the text to answer from (joined retrieved chunks, or a broad
-    # sample of the whole document for summary/overview questions).
-    # The professional answering instructions live in prompt.txt (system role);
-    # the context + question are supplied as untrusted data (user role).
-    log.info("Answering question: %.80s", question)
+def answer_question(context, question, history=None):
+    # context is the text to answer from (the whole small document, or the broad
+    # sample / top-k chunks for large ones). history is the prior conversation.
+    # The professional instructions live in prompt.txt (system role); the context
+    # + question are supplied as untrusted data (user role).
+    log.info("Answering message: %.80s", question)
     system_prompt = _load_prompt()
     user_prompt = (
         "CONTEXT:\n" + context + "\n\nUSER MESSAGE:\n" + question +
         "\n\nReply per your instructions."
     )
-    return _chat(user_prompt, system_prompt=system_prompt)
+    return _chat(user_prompt, system_prompt=system_prompt, history=history)
 
 def derive_rules(document_text):
     log.info("Deriving rules from document (%d chars)", len(document_text))
