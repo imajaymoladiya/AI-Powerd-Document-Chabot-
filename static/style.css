@@ -1,0 +1,118 @@
+:root {
+  --bg: #f1f5fb;
+  --card: #ffffff;
+  --card-2: #f3f7ff;
+  --text: #0f2440;
+  --muted: #5b6b85;
+  --primary: #2563eb;
+  --primary-2: #1d4ed8;
+  --accent-soft: #eef4ff;
+  --ok: #15803d;
+  --err: #dc2626;
+  --border: #d9e4f5;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Hero */
+.hero {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+  padding: 28px 20px;
+  color: #fff;
+}
+.hero-inner { max-width: 1180px; margin: 0 auto; }
+.hero h1 { margin: 0; font-size: 1.7rem; }
+.hero p { margin: 8px 0 0; opacity: .95; font-size: 1rem; }
+
+/* Layout */
+.grid {
+  max-width: 1180px; margin: 24px auto; padding: 0 18px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+}
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+.col { display: flex; flex-direction: column; gap: 18px; }
+
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, .07);
+}
+.card h2 { margin: 0 0 14px; font-size: 1.05rem; color: var(--primary-2); }
+
+/* Dropzone */
+.dropzone {
+  display: block; text-align: center; cursor: pointer;
+  border: 2px dashed var(--border); border-radius: 12px;
+  padding: 28px 14px; color: var(--muted); background: var(--card-2);
+  transition: border-color .15s, background .15s;
+}
+.dropzone:hover, .dropzone.drag { border-color: var(--primary); background: var(--accent-soft); }
+.dropzone.has-file { border-style: solid; border-color: var(--primary); color: var(--text); background: var(--accent-soft); }
+.dropzone small { color: var(--muted); }
+
+/* Buttons */
+.btn {
+  width: 100%; border: none; border-radius: 10px; padding: 12px 14px;
+  margin-top: 14px; font-size: .95rem; font-weight: 600; cursor: pointer;
+  color: #fff; background: var(--primary);
+  transition: transform .05s, box-shadow .15s, opacity .15s;
+}
+.btn.primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  box-shadow: 0 4px 14px rgba(37, 99, 235, .3);
+}
+.btn:hover:not(:disabled) { box-shadow: 0 6px 18px rgba(37, 99, 235, .4); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
+.status { margin-top: 12px; font-size: .9rem; color: var(--muted); min-height: 18px; }
+.status.err { color: var(--err); }
+.status.ok { color: var(--ok); }
+
+/* Rules */
+.rules {
+  white-space: pre-wrap; word-wrap: break-word; margin: 0;
+  font-family: inherit; line-height: 1.55; color: var(--text);
+  max-height: 460px; overflow: auto;
+}
+
+/* Chat */
+.chat-card { display: flex; flex-direction: column; min-height: 480px; }
+.chat { flex: 1; overflow: auto; padding-right: 4px; }
+.empty { color: var(--muted); text-align: center; padding: 50px 10px; }
+.msg { margin: 12px 0; }
+.msg .who { font-size: .72rem; color: var(--muted); margin-bottom: 4px; }
+.bubble {
+  border-radius: 12px; padding: 11px 14px; line-height: 1.55;
+  white-space: pre-wrap; word-wrap: break-word;
+}
+.msg.user .bubble { background: var(--card-2); border: 1px solid var(--border); color: var(--text); }
+.msg.bot .bubble { background: var(--accent-soft); border: 1px solid #c7dbff; color: var(--text); }
+
+/* Ask form */
+.ask { display: flex; gap: 8px; margin-top: 12px; }
+.ask input {
+  flex: 1; background: #fff; border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px; color: var(--text); font-size: .95rem;
+}
+.ask input::placeholder { color: #9bb0cf; }
+.ask input:focus { outline: 2px solid var(--primary); border-color: var(--primary); }
+.ask .btn { width: auto; padding: 12px 22px; margin-top: 0; }
+
+.hidden { display: none !important; }
+
+/* Spinner */
+.spin {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(37, 99, 235, .25); border-top-color: var(--primary);
+  border-radius: 50%; display: inline-block; vertical-align: -2px;
+  animation: spin .7s linear infinite; margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

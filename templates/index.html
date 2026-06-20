@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document Agent</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <h1>📄 Document Agent</h1>
+      <p>Upload a document to see its key rules and ask questions about it in plain language.</p>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- LEFT: upload + rules -->
+    <section class="col">
+      <div class="card">
+        <h2>1 · Upload your document</h2>
+        <label class="dropzone" id="dropzone">
+          <input type="file" id="fileInput"
+                 accept=".txt,.md,.pdf,.docx,.png,.jpg,.jpeg,.tiff,.bmp,.webp" hidden />
+          <span id="fileLabel">Click to choose a file<br><small>PDF, Word, text, or image</small></span>
+        </label>
+        <button id="buildBtn" class="btn primary" disabled>Process document</button>
+        <div id="buildStatus" class="status"></div>
+      </div>
+
+      <div class="card">
+        <h2>📋 Derived rules</h2>
+        <pre id="rules" class="rules">Upload a document to see its rules…</pre>
+      </div>
+    </section>
+
+    <!-- RIGHT: Q&A -->
+    <section class="col">
+      <div class="card chat-card">
+        <h2>💬 Ask a question</h2>
+        <div id="chat" class="chat">
+          <div class="empty" id="chatEmpty">
+            Ask anything about your document.
+          </div>
+        </div>
+        <form id="askForm" class="ask">
+          <input type="text" id="question" autocomplete="off"
+                 placeholder="Ask about your document…" disabled />
+          <button id="askBtn" class="btn primary" disabled>Send</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

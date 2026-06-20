@@ -1,0 +1,10 @@
+flask
+groq
+python-dotenv
+pypdf
+python-docx
+fastembed
+chromadb
+numpy
+sarvamai
+pillow

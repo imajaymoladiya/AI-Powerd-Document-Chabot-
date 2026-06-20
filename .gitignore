@@ -1,0 +1,36 @@
+# Secrets / environment
+.env
+*.env
+.env.*
+
+# Virtual environment
+myenv/
+venv/
+env/
+.venv/
+
+# Python cache / build
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Logs
+logs/
+*.log
+
+# Local model / data caches
+.cache/
+.fastembed_cache/
+chroma/
+*.zip
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
